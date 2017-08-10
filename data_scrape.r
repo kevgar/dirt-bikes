@@ -43,10 +43,10 @@ cleanup <- function(my.list, i, j, k=1){
         str_replace("<tr>", "") %>%
         # remove trailing characters
         str_replace("</a>","") %>%
-        # split string into Summary and Full (for description column)
-        str_split("<span>") %>% .[[1]] %>% 
         # get the kth element (1 for Summary, 2 for Full)
-        .[k] %>% 
+        str_split("<span>") %>% .[[1]] %>% .[k] %>%
+        # remove trailing characters (special case)
+        str_split(" BACKNEXT") %>% .[[1]] %>% .[1] %>%
         # remove trailing characters
         str_replace("</span>","")
 }
@@ -90,6 +90,10 @@ rows_list_cleaned <- lapply(X=1:length(rows_list), FUN=function(i){
 
 # rbind list into single data frame
 df <- rows_list_cleaned %>% do.call("rbind",.)
+
+# problem <- df[df$url=="http://www.bikefinds.com/for-sale/e152654787680", "Description2"]
+
+
 
 # lapply(df, class)
 # df <- lapply(df, as.character)
