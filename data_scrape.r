@@ -115,5 +115,17 @@ df$Price %>% sub('\\$','',.) %>% sub(',','',.) %>% as.numeric()
 # # Frequency table of Source
 # table(df$Source)[order(-table(df$Source))]
 
+hist(df$Price[df$Bike=="YZ125" & 
+                  as.numeric(df$Year) >= 2005 & 
+                  as.numeric(df$Year) <= 2016], 
+     xlab = "Price (USD)",
+     main = "Asking price for YZ125\n2005-2016 models")
+
+hist(df$Price[df$Bike=="YZ250" & 
+                  as.numeric(df$Year) >= 2005 & 
+                  as.numeric(df$Year) <= 2016], 
+     xlab = "Price (USD)",
+     main = "Asking price for YZ250\n2005-2016 models")
+
 # Write cleaned data frame to csv
 write_csv(x=df, path="2-stroke_dirt-bikes_cleaned.csv")
