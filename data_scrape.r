@@ -1,5 +1,4 @@
 library(tidyverse)
-library(data.table)
 
 options(stringsAsFactors = FALSE)
 
@@ -22,14 +21,15 @@ rows_list <- as.list(rows[1][[1]])
 # remove string contents before the "<tr>"
 rows_list <- lapply(X=rows_list,FUN=function(i) str_replace(i, ".*<tr>", "<tr>"))
 
-rows_list[[1]]   # header
-rows_list[[2]]   # listing 1
-rows_list[[3]]   # listing 2
-rows_list[[724]] # ...
-rows_list[[725]] # listing 724
-rows_list[[726]] # close table
+# rows_list[[1]]   # header
+# rows_list[[2]]   # listing 1
+# rows_list[[3]]   # listing 2
+# rows_list[[724]] # ...
+# rows_list[[725]] # listing 724
+# rows_list[[726]] # close table
 
-rows_list[[1]] <- rows_list[[726]] <- NULL # remove invalid rows
+# remove invalid rows
+rows_list[[1]] <- rows_list[[length(rows_list)]] <- NULL 
 
 cleanup <- function(my.list, i, j, k=1){
     my.list[[i]] %>% 
@@ -45,10 +45,11 @@ cleanup <- function(my.list, i, j, k=1){
         str_replace("</a>","") %>%
         # get the kth element (1 for Summary, 2 for Full)
         str_split("<span>") %>% .[[1]] %>% .[k] %>%
-        # remove trailing characters (special case)
-        str_split(" BACKNEXT") %>% .[[1]] %>% .[1] %>%
         # remove trailing characters
-        str_replace("</span>","")
+        str_split(" BACKNEXT") %>% .[[1]] %>% .[1] %>%
+        str_replace("</span>","") %>% 
+        str_replace(" \\(auction\\)","")
+    
 }
 
 # cleanup(rows_list, 1, 1)
@@ -69,6 +70,8 @@ get.url <- function(my.list, i, j){
         paste0("http://www.bikefinds.com/for-sale/", .)
 }
 
+usd2num <- function(x) as.numeric(sub('\\$','',sub(',','',x)))
+
 # get.url(rows_list, 1, 2)
 
 rows_list_cleaned <- lapply(X=1:length(rows_list), FUN=function(i){
@@ -79,7 +82,7 @@ rows_list_cleaned <- lapply(X=1:length(rows_list), FUN=function(i){
         Bike         = cleanup(rows_list, i, 1),
         Description1 = cleanup(rows_list, i, 2, 1),
         Description2 = cleanup(rows_list, i, 2, 2),
-        Price        = cleanup(rows_list, i, 3),
+        Price        = usd2num(cleanup(rows_list, i, 3)),
         Year         = cleanup(rows_list, i, 4),
         Location     = cleanup(rows_list, i, 5),
         State        = cleanup(rows_list, i, 6),
@@ -89,11 +92,16 @@ rows_list_cleaned <- lapply(X=1:length(rows_list), FUN=function(i){
     })
 
 # rbind list into single data frame
-df <- rows_list_cleaned %>% do.call("rbind",.)
+df <- do.call("rbind",rows_list_cleaned)
 
-# problem <- df[df$url=="http://www.bikefinds.com/for-sale/e152654787680", "Description2"]
+df$Price
+
+df$Price %>% sub('\\$','',.) %>% sub(',','',.) %>% as.numeric()
 
 
+
+
+# df[df$url=="http://www.bikefinds.com/for-sale/e152654787680", "Description2"]
 
 # lapply(df, class)
 # df <- lapply(df, as.character)
