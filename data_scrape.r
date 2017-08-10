@@ -1,4 +1,6 @@
 library(tidyverse)
+library(plotly)
+
 
 options(stringsAsFactors = FALSE)
 
@@ -70,7 +72,7 @@ get.url <- function(my.list, i, j){
         paste0("http://www.bikefinds.com/for-sale/", .)
 }
 
-usd2num <- function(x) as.numeric(sub('\\$','',sub(',','',x)))
+usd2num <- function(x) as.integer(sub('\\$','',sub(',','',x)))
 
 # get.url(rows_list, 1, 2)
 
@@ -83,7 +85,7 @@ rows_list_cleaned <- lapply(X=1:length(rows_list), FUN=function(i){
         Description1 = cleanup(rows_list, i, 2, 1),
         Description2 = cleanup(rows_list, i, 2, 2),
         Price        = usd2num(cleanup(rows_list, i, 3)),
-        Year         = cleanup(rows_list, i, 4),
+        Year         = as.integer(cleanup(rows_list, i, 4)),
         Location     = cleanup(rows_list, i, 5),
         State        = cleanup(rows_list, i, 6),
         Listed       = cleanup(rows_list, i, 7),
@@ -93,15 +95,6 @@ rows_list_cleaned <- lapply(X=1:length(rows_list), FUN=function(i){
 
 # rbind list into single data frame
 df <- do.call("rbind",rows_list_cleaned)
-
-df$Price
-
-df$Price %>% sub('\\$','',.) %>% sub(',','',.) %>% as.numeric()
-
-
-
-
-# df[df$url=="http://www.bikefinds.com/for-sale/e152654787680", "Description2"]
 
 # lapply(df, class)
 # df <- lapply(df, as.character)
@@ -115,17 +108,24 @@ df$Price %>% sub('\\$','',.) %>% sub(',','',.) %>% as.numeric()
 # # Frequency table of Source
 # table(df$Source)[order(-table(df$Source))]
 
-hist(df$Price[df$Bike=="YZ125" & 
-                  as.numeric(df$Year) >= 2005 & 
-                  as.numeric(df$Year) <= 2016], 
+x1 <- df$Price[df$Bike=="YZ125" & df$Year >= 2005 & df$Year <= 2016]
+x2 <- df$Price[df$Bike=="YZ250" & df$Year >= 2005 & df$Year <= 2016]
+
+hist(df$Price, 
+     xlab = "Price (USD)",
+     main = "Asking price for 2-strokes")
+
+hist(x1, 
      xlab = "Price (USD)",
      main = "Asking price for YZ125\n2005-2016 models")
 
-hist(df$Price[df$Bike=="YZ250" & 
-                  as.numeric(df$Year) >= 2005 & 
-                  as.numeric(df$Year) <= 2016], 
+hist(x2, 
      xlab = "Price (USD)",
      main = "Asking price for YZ250\n2005-2016 models")
 
+
+plot_ly(df, x = ~Year, y = ~Price, type = 'scatter', mode = 'markers',
+             text = ~paste('Location: ', Location), color = ~as.factor(Bike))
+    
 # Write cleaned data frame to csv
 write_csv(x=df, path="2-stroke_dirt-bikes_cleaned.csv")
