@@ -64,3 +64,6 @@ df.sum <- df.dummies[, lapply(.SD, sum), by=Link, .SDcols=cols]
 df_final <- left_join(df.sum, df[,-10]) %>% .[, c(7:14, 1:6)]
 write_csv(x=df_final, path="dirt-bikes_cleaned.csv")
 
+small <- df_final[df_final$Category_motocross.bikes==1 & df_final$Category_mini.bikes ==0,][, 1:9]
+write_csv(x=small, path="dirt-bikes_cleaned.csv")
+
