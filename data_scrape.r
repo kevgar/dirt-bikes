@@ -1,7 +1,6 @@
 library(tidyverse)
 library(plotly)
 
-
 options(stringsAsFactors = FALSE)
 
 setwd("~/GitHub/dirt-bikes")
@@ -96,36 +95,5 @@ rows_list_cleaned <- lapply(X=1:length(rows_list), FUN=function(i){
 # rbind list into single data frame
 df <- do.call("rbind",rows_list_cleaned)
 
-# lapply(df, class)
-# df <- lapply(df, as.character)
-
-# # Frequency table of Bike
-# table(df$Bike)[order(-table(df$Bike))]
-# # Frequency table of Year
-# table(df$Year)[order(-table(df$Year))]
-# # Frequency table of State
-# table(df$State)[order(-table(df$State))]
-# # Frequency table of Source
-# table(df$Source)[order(-table(df$Source))]
-
-x1 <- df$Price[df$Bike=="YZ125" & df$Year >= 2005 & df$Year <= 2016]
-x2 <- df$Price[df$Bike=="YZ250" & df$Year >= 2005 & df$Year <= 2016]
-
-hist(df$Price, 
-     xlab = "Price (USD)",
-     main = "Asking price for 2-strokes")
-
-hist(x1, 
-     xlab = "Price (USD)",
-     main = "Asking price for YZ125\n2005-2016 models")
-
-hist(x2, 
-     xlab = "Price (USD)",
-     main = "Asking price for YZ250\n2005-2016 models")
-
-
-plot_ly(df, x = ~Year, y = ~Price, type = 'scatter', mode = 'markers',
-             text = ~paste('Location: ', Location), color = ~as.factor(Bike))
-    
 # Write cleaned data frame to csv
 write_csv(x=df, path="2-stroke_dirt-bikes_cleaned.csv")
