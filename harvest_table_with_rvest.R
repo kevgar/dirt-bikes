@@ -23,7 +23,7 @@ get_links <- function(Url){
         html_attr("id") %>%
         .[!is.na(.)]
     # Add prefix and create hyperlink
-    paste0(paste0('[Link](http://www.bikefinds.com/for-sale/',id,')'))
+    paste0('http://www.bikefinds.com/for-sale/',id)
     }
 
 get_category <- function(Url){
