@@ -1,22 +1,15 @@
----
-title: "Exploration of two-stroke dirt-bike listings"
-author: "Kevin Garder"
-date: "8/10/2017"
-output: html_document
----
+# "Exploration of two-stroke dirt-bike listings"
+# "Kevin Garder"
+# "8/10/2017"
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 library(plotly)
 library(dplyr)
-```
 
-```{r}
+
+# Load cleaned data
 df <- read.csv("2-stroke_dirt-bikes_cleaned.csv")
-```
 
 
-```{r, collapse=TRUE}
 # Number of listings by Model
 table(df$Bike)[order(-table(df$Bike))]
 # Number of listings by Year
@@ -25,33 +18,26 @@ table(df$Year)[order(-table(df$Year))]
 table(df$State)[order(-table(df$State))]
 # Number of listings by Source
 table(df$Source)[order(-table(df$Source))]
-```
 
-```{r, include=FALSE, echo=FALSE}
+
+# Histogram of Asking price (All two-strokes)
 hist(df$Price,
      xlab = "Price (USD)",
      main = "Histogram of Asking Price")
-```
 
-The following histogram shows that YZ125 are less common than YZ250 and YZ125 are priced about $500 lower than YZ250 on average.
-
-```{r,include=FALSE, echo=FALSE}
+# Histogram of Asking price (YZ125 and YZ250)
 x1 <- df$Price[df$Bike=="YZ125" & df$Year >= 2005 & df$Year <= 2016]
 x2 <- df$Price[df$Bike=="YZ250" & df$Year >= 2005 & df$Year <= 2016]
 
 par(mfrow=c(1,2))
-
 hist(x1, 
      xlab = "Price (USD)",
      main = "Asking price for YZ125\n2005-2016 models")
-
 hist(x2, 
      xlab = "Price (USD)",
      main = "Asking price for YZ250\n2005-2016 models")
-```
 
-
-```{r}
+# Add column Freq for frequency of occurance
 frequencyTable <- data.frame(table(df$Bike))
 names(frequencyTable)[1] <- "Bike"
 
@@ -66,4 +52,3 @@ plot_ly(df_subset,
         mode  = 'markers',
         text  = ~paste('Location: ',paste(Location,State,sep=", ")), 
         color = ~as.factor(Bike))
-```
