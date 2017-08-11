@@ -3,6 +3,9 @@ title: "Two-stroke dirt-bikes data exploration"
 output: html_notebook
 ---
 
+```{r}
+source('~/GitHub/dirt-bikes/data_scrape.r')
+```
 
 
 ```{r, collapse=TRUE}
@@ -24,20 +27,6 @@ hist(df$Price,
 
 The following histogram shows that YZ125 are less common than YZ250 and YZ125 are priced about $500 lower than YZ250 on average.
 
-```{r}
-x1 <- df$Price[df$Bike=="YZ125" & df$Year >= 2005 & df$Year <= 2016]
-x2 <- df$Price[df$Bike=="YZ250" & df$Year >= 2005 & df$Year <= 2016]
-
-par(mfrow=c(1,2))
-
-hist(x1, 
-     xlab = "Price (USD)",
-     main = "Asking price for YZ125\n2005-2016 models")
-
-hist(x2, 
-     xlab = "Price (USD)",
-     main = "Asking price for YZ250\n2005-2016 models")
-```
 ```{r}
 x1 <- df$Price[df$Bike=="YZ125" & df$Year >= 2005 & df$Year <= 2016]
 x2 <- df$Price[df$Bike=="YZ250" & df$Year >= 2005 & df$Year <= 2016]

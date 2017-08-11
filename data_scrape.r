@@ -1,4 +1,5 @@
 library(tidyverse)
+library(stringr)
 library(plotly)
 
 options(stringsAsFactors = FALSE)
