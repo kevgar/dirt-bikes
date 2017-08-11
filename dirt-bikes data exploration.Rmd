@@ -64,6 +64,6 @@ plot_ly(df_subset,
         y     = ~Price, 
         type  = 'scatter', 
         mode  = 'markers',
-        text  = ~paste('Location: ',paste(Location,State,sep=" ,")), 
+        text  = ~paste('Location: ',paste(Location,State,sep=", ")), 
         color = ~as.factor(Bike))
 ```
