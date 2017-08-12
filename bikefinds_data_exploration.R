@@ -6,19 +6,29 @@ library(plotly)
 library(dplyr)
 library(stringr)
 library(data.table)
+library(broom)
 
 
 # Load cleaned data
-df <- data.table(read.csv("two-strokes_cleaned.csv"))
+dt <- data.table(read.csv("two-strokes_cleaned.csv"))
 
 usd2num <- function(x) as.integer(
     str_replace(sub('\\$','',sub(',','',x))," \\(auction\\)","")
     )
+# convert currency to integer
+dt[, Price:=usd2num(Price)]
+# add column for bike count
+dt[, Count:=.N, by=Bike]
+# convert Bike column to factor
+dt[, Bike:=as.factor(Bike)]
 
+# Top 5 most common Bikes
+# unique(dt$Bike[(order(-dt$Count))])[1:5]
 
-
-df[, Price:=usd2num(Price)]
-
+# create subset for plotting
+dt_subset <- dt[Count>=10 & 
+             !is.na(Year) & 
+             Bike %in% unique(Bike[(order(-Count))])[1:5],]
 
 # # Number of listings by Model
 # table(df$Bike)[order(-table(df$Bike))]
@@ -28,73 +38,39 @@ df[, Price:=usd2num(Price)]
 # table(df$State)[order(-table(df$State))]
 # # Number of listings by Source
 # table(df$Source)[order(-table(df$Source))]
-# 
-# 
-# # Histogram of Asking price (All two-strokes)
-# hist(df$Price,
-#      xlab = "Price (USD)",
-#      main = "Histogram of Asking Price")
-# 
-# # Histogram of Asking price (YZ125 and YZ250)
-# x1 <- df$Price[df$Bike=="YZ125" & df$Year >= 2005 & df$Year <= 2016]
-# x2 <- df$Price[df$Bike=="YZ250" & df$Year >= 2005 & df$Year <= 2016]
-# 
-# par(mfrow=c(1,2))
-# hist(x1, 
-#      xlab = "Price (USD)",
-#      main = "Asking price for YZ125\n2005-2016 models")
-# hist(x2, 
-#      xlab = "Price (USD)",
-#      main = "Asking price for YZ250\n2005-2016 models")
 
-# Add column Freq for frequency of occurance
-frequencyTable <- data.table(table(df$Bike))
-names(frequencyTable)[1] <- "Bike"
+# Fit a linear model
+m <- lm(Price ~ Year*Bike, dt_subset)
 
-df <- data.table(left_join(df,frequencyTable))
+# Plot the data and interactions
+p <- broom::augment(m) %>%
+    
+    plot_ly(x = ~Year, showlegend = TRUE) %>%
+    
+    add_markers(y = ~Price,
+                color = ~Bike,
+                text = ~paste('Location: ',paste(dt_subset$Location,dt_subset$State,sep=", "))) %>%
+    
+    add_ribbons(ymin = ~.fitted - 1.96 * .se.fit,
+                ymax = ~.fitted + 1.96 * .se.fit,
+                color = ~Bike) %>%
+    
+    add_lines(y = ~.fitted, color = ~Bike) %>% 
+    
+    layout(title = 'Asking Price vs Year of Common Two-strokes')
 
-df_subset <- df[N >= 10 &
-                    !is.na(Year),]
-
-# fit <- lm(Price ~ Year, data = df_subset)
-
-plot_ly(df_subset, 
-        x     = ~Year, 
-        y     = ~Price, 
-        type  = 'scatter', 
-        mode  = 'markers',
-        text  = ~paste('Location: ',paste(Location,State,sep=", ")), 
-        color = ~as.factor(Bike))
-
-dt <- data.table(df_subset)
-dt[, Bike:=as.factor(Bike)]
-fit <- lm(formula=Price ~ Year*Bike,data=dt)
-# dt[,years.old:=as.integer(format(Sys.time(), "%Y"))-Year]
-
-plot_ly(dt, 
-        x     = ~Year, 
-        y     = ~Price, 
-        type  = 'scatter', 
-        mode  = 'markers',
-        text  = ~paste('Location: ',paste(Location,State,sep=", ")), 
-        color = ~as.factor(Bike)) %>% 
-    add_lines(x=~Year, y=predict(fit))
+p
+# chart_link = api_create(p, filename="text/mode")
+# chart_link
 
 
-# thedata <- data.frame(Price=predict(thelm), years.old=thelm$model$years.old, Bike=thelm$model$Bike)
-# ggplot(thedata, aes(x = years.old, y = Price, group = Bike, color = Bike)) + geom_line()
-
-
-
-
-
-
-
-# thelm <- lm(formula=Price ~ years.old*Bike,data=dt)
-# thedata <- data.frame(Price=predict(thelm), years.old=thelm$model$years.old, Bike=thelm$model$Bike)
-# ggplot(thedata, aes(x = years.old, y = Price, group = Bike, color = Bike)) + geom_line()
-
-
-
+kerns <- c("gaussian", "epanechnikov", "rectangular", 
+           "triangular", "biweight", "cosine", "optcosine")
+p <- plot_ly()
+for (k in kerns) {
+    d <- density(dt_subset$Price, kernel = k, na.rm = TRUE)
+    p <- add_lines(p, x = d$x, y = d$y, name = k)
+}
+layout(p, title = 'Asking Price vs Year of Common Two-strokes',xaxis = list(title = "Price"))
 
 
