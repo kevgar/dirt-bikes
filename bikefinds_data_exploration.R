@@ -65,43 +65,36 @@ plot_ly(df_subset,
         mode  = 'markers',
         text  = ~paste('Location: ',paste(Location,State,sep=", ")), 
         color = ~as.factor(Bike))
-   
-library(plotly)
-library(broom)
 
-bikes <-  unique(df_subset$Bike)
-colors <- c('(255, 0, 0', '(0, 255, 0', '(0, 0, 255')
+dt <- data.table(df_subset)
+dt[, Bike:=as.factor(Bike)]
+fit <- lm(formula=Price ~ Year*Bike,data=dt)
+# dt[,years.old:=as.integer(format(Sys.time(), "%Y"))-Year]
 
-p <- plot_ly()
+plot_ly(dt, 
+        x     = ~Year, 
+        y     = ~Price, 
+        type  = 'scatter', 
+        mode  = 'markers',
+        text  = ~paste('Location: ',paste(Location,State,sep=", ")), 
+        color = ~as.factor(Bike)) %>% 
+    add_lines(x=~Year, y=predict(fit))
 
-for (i in 1:length(bikes)) {
-    
-    browser()
-    
-    p <- add_lines(p, data = df_subset[which(df_subset$Bike==bikes[[i]]), ],
-                   y = fitted(lm(data = df_subset[which(df_subset$Bike==bikes[[i]]), ], Price ~ Year)),
-                   x = ~Year,
-                   line = list(color = paste('rgb', colors[[i]], ')')),
-                   name = bikes[[i]])
-    p <- add_ribbons(p, data = augment(lm(data = df_subset[which(df_subset$Bike==bikes[[i]]), ], Price ~ Year)),
-                     y = ~Price,
-                     x = ~Year,
-                     ymin = ~.fitted - 1.96 * .se.fit,
-                     ymax = ~.fitted + 1.96 * .se.fit,
-                     line = list(color = paste('rgba', colors[[i]], ', 0.05)')), 
-                     fillcolor = paste('rgba', colors[[i]], ', 0.1)'),
-                     showlegend = FALSE)
-    p <- add_markers(p, data = df_subset[which(df_subset$Bike==bikes[[i]]), ], 
-                     x = ~Year, 
-                     y = ~Price,
-                     # symbol = ~bikes,
-                     # symbol = bikes[[i]],
-                     # symbol = ~Bike,
-                     marker=list(color=paste('rgb', colors[[i]])))
-}
-p <- layout(p, xaxis = list(title = "Year"), yaxis = list(title = "Price"))
 
-p
+# thedata <- data.frame(Price=predict(thelm), years.old=thelm$model$years.old, Bike=thelm$model$Bike)
+# ggplot(thedata, aes(x = years.old, y = Price, group = Bike, color = Bike)) + geom_line()
+
+
+
+
+
+
+
+# thelm <- lm(formula=Price ~ years.old*Bike,data=dt)
+# thedata <- data.frame(Price=predict(thelm), years.old=thelm$model$years.old, Bike=thelm$model$Bike)
+# ggplot(thedata, aes(x = years.old, y = Price, group = Bike, color = Bike)) + geom_line()
+
+
 
 
 
