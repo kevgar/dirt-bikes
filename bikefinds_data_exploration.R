@@ -1,7 +1,7 @@
 # "Exploration of two-stroke dirt-bike listings"
 # "Kevin Garder"
 # "8/10/2017"
-
+options(stringsAsFactors = F)
 library(plotly)
 library(dplyr)
 library(stringr)
@@ -48,14 +48,15 @@ df[, Price:=usd2num(Price)]
 #      main = "Asking price for YZ250\n2005-2016 models")
 
 # Add column Freq for frequency of occurance
-frequencyTable <- data.frame(table(df$Bike))
+frequencyTable <- data.table(table(df$Bike))
 names(frequencyTable)[1] <- "Bike"
 
-df <- left_join(df,frequencyTable)
+df <- data.table(left_join(df,frequencyTable))
 
-table(df$Price[order(df$Price),drop=F])
+df_subset <- df[N >= 10 &
+                    !is.na(Year),]
 
-df_subset <- df[df$Freq >= 10,]
+# fit <- lm(Price ~ Year, data = df_subset)
 
 plot_ly(df_subset, 
         x     = ~Year, 
@@ -64,3 +65,43 @@ plot_ly(df_subset,
         mode  = 'markers',
         text  = ~paste('Location: ',paste(Location,State,sep=", ")), 
         color = ~as.factor(Bike))
+   
+library(plotly)
+library(broom)
+
+bikes <-  unique(df_subset$Bike)
+colors <- c('(255, 0, 0', '(0, 255, 0', '(0, 0, 255')
+
+p <- plot_ly()
+
+for (i in 1:length(bikes)) {
+    
+    browser()
+    
+    p <- add_lines(p, data = df_subset[which(df_subset$Bike==bikes[[i]]), ],
+                   y = fitted(lm(data = df_subset[which(df_subset$Bike==bikes[[i]]), ], Price ~ Year)),
+                   x = ~Year,
+                   line = list(color = paste('rgb', colors[[i]], ')')),
+                   name = bikes[[i]])
+    p <- add_ribbons(p, data = augment(lm(data = df_subset[which(df_subset$Bike==bikes[[i]]), ], Price ~ Year)),
+                     y = ~Price,
+                     x = ~Year,
+                     ymin = ~.fitted - 1.96 * .se.fit,
+                     ymax = ~.fitted + 1.96 * .se.fit,
+                     line = list(color = paste('rgba', colors[[i]], ', 0.05)')), 
+                     fillcolor = paste('rgba', colors[[i]], ', 0.1)'),
+                     showlegend = FALSE)
+    p <- add_markers(p, data = df_subset[which(df_subset$Bike==bikes[[i]]), ], 
+                     x = ~Year, 
+                     y = ~Price,
+                     # symbol = ~bikes,
+                     # symbol = bikes[[i]],
+                     # symbol = ~Bike,
+                     marker=list(color=paste('rgb', colors[[i]])))
+}
+p <- layout(p, xaxis = list(title = "Year"), yaxis = list(title = "Price"))
+
+p
+
+
+
